@@ -1,7 +1,96 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { List } from "antd";
+import axios from "axios";
+import styled from "styled-components";
+
+type Props = {
+  id: number;
+  size: number;
+  price: number;
+  face: string;
+  data: Date;
+};
 
 function App() {
-  return <div></div>;
+  const [data, setData] = useState<Array<Props>>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      await axios
+        .get("http://localhost:3000/products?_page=10&_limit=15")
+        .then((res) => {
+          setData(res.data);
+        })
+        .catch((err) => {
+          console.log({ err });
+        });
+    };
+    fetchData();
+  }, []);
+
+  return (
+    <Container>
+      <Head>welcome to our website!</Head>
+      <List
+        grid={{
+          gutter: 16,
+          xs: 1,
+          sm: 2,
+          md: 4,
+          lg: 4,
+          xl: 6,
+          xxl: 3,
+        }}
+        dataSource={data}
+        renderItem={(item: Props) => (
+          <List.Item>
+            <Card title={item.face}>Card content</Card>
+          </List.Item>
+        )}
+      />
+    </Container>
+  );
 }
 
 export default App;
+
+export const Container = styled.div`
+  padding: 50px;
+`;
+
+export const Head = styled.h1`
+  font-size: 25px;
+  color: black;
+  text-align: left;
+  font-weight: bold;
+  text-transform: capitalize;
+  margin-bottom: 35px;
+`;
+export const Card = styled.div`
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  color: rgba(0, 0, 0, 0.85);
+  font-size: 14px;
+  font-variant: tabular-nums;
+  line-height: 1.5715;
+  list-style: none;
+  font-feature-settings: "tnum", "tnum";
+  position: relative;
+  background: #fff;
+  border-radius: 2px;
+  border: 1px solid #ececec;
+  padding: 24px;
+`;
+
+// export const CardHead = styled.div`
+// min-height: 48px;
+//     margin-bottom: -1px;
+//     padding: 0 24px;
+//     color: rgba(0, 0, 0, 0.85);
+//     font-weight: 500;
+//     font-size: 16px;
+//     background: transparent;
+//     border-bottom: 1px solid #f0f0f0;
+//     border-radius: 2px 2px 0 0;
+// `
