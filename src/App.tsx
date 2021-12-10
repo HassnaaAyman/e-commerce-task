@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { List } from "antd";
+import { List, Spin } from "antd";
 import axios from "axios";
 import styled from "styled-components";
 
@@ -8,7 +8,7 @@ type Props = {
   size: number;
   price: number;
   face: string;
-  data: Date;
+  date: Date;
 };
 
 function App() {
@@ -28,6 +28,18 @@ function App() {
     fetchData();
   }, []);
 
+  if (data.length === 0) {
+    return (
+      <Spin
+        tip="loading..."
+        size="large"
+        style={{ display: "flex", alignSelf: "center" }}
+      />
+    );
+  }
+
+  console.log(data.length, ">>>");
+
   return (
     <Container>
       <Head>welcome to our website!</Head>
@@ -44,7 +56,13 @@ function App() {
         dataSource={data}
         renderItem={(item: Props) => (
           <List.Item>
-            <Card title={item.face}>Card content</Card>
+            <Card>
+              <CardBody size={item.size}>{item.face}</CardBody>
+              <CardFooter>
+                <CardList>{item.price}</CardList>
+                <CardList>{item.date}</CardList>
+              </CardFooter>
+            </Card>
           </List.Item>
         )}
       />
@@ -66,6 +84,7 @@ export const Head = styled.h1`
   text-transform: capitalize;
   margin-bottom: 35px;
 `;
+
 export const Card = styled.div`
   box-sizing: border-box;
   margin: 0;
@@ -81,8 +100,34 @@ export const Card = styled.div`
   border-radius: 2px;
   border: 1px solid #ececec;
   padding: 24px;
+  min-height: 564px;
 `;
 
+export const CardBody = styled.div`
+  font-size: ${(props: { size: number }) => `${props.size}px`};
+  text-align: center;
+  min-height: 267px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+`;
+
+export const CardFooter = styled.ul`
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: #fff;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  flex-direction: column;
+`;
+
+export const CardList = styled.li`
+  float: left;
+  margin: 12px 0;
+  color: #00000073;
+  text-align: center;
+`;
 // export const CardHead = styled.div`
 // min-height: 48px;
 //     margin-bottom: -1px;
