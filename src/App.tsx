@@ -28,11 +28,6 @@ function App() {
     fetchData();
   }, []);
 
-  // const convertDateToARelativeTime = (date: any) => {
-  //   console.log(date.split("GMT+0200 (Eastern European Standard Time)"));
-  //   return date;
-  // };
-
   const formatDate = (date: string | number | Date) => {
     const createdAt: any = new Date(date);
 
@@ -73,6 +68,14 @@ function App() {
     }
   };
 
+  const convertCentToDollar = (cent: number) => {
+    const dollars = cent / 100;
+    return dollars.toLocaleString("en-US", {
+      style: "currency",
+      currency: "USD",
+    });
+  };
+
   if (data.length === 0) {
     return (
       <Spin
@@ -104,8 +107,8 @@ function App() {
             <Card>
               <CardBody size={item.size}>{item.face}</CardBody>
               <CardFooter>
-                <CardList>{item.price}</CardList>
-                <CardList>{formatDate(item.date)}</CardList>
+                <CardList>Price: {convertCentToDollar(item.price)}</CardList>
+                <CardList>CreatedAt: {formatDate(item.date)}</CardList>
               </CardFooter>
             </Card>
           </List.Item>
@@ -145,7 +148,7 @@ export const Card = styled.div`
   border-radius: 2px;
   border: 1px solid #ececec;
   padding: 24px;
-  min-height: 564px;
+  min-height: 430px;
 `;
 
 export const CardBody = styled.div`
