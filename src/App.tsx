@@ -1,9 +1,18 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useEffect, useCallback, useState } from "react";
-import { Button, List, Menu, Spin, Dropdown } from "antd";
+import { useEffect, useState } from "react";
+import { Button, List, Menu, Spin, Dropdown, Card, notification } from "antd";
 import axios from "axios";
-import styled from "styled-components";
 import useHandleScroll from "./utils/useHandleScroll";
+import { formatDate } from "./utils/handleDateFormat";
+import { convertCentToDollar } from "./utils/handleCurrencyFormat";
+import {
+  SpinContainer,
+  Container,
+  Head,
+  CardBody,
+  CardFooter,
+  CardList,
+} from "./styles";
 
 type Props = {
   id: number;
@@ -42,7 +51,7 @@ function App() {
         }
       })
       .catch((err) => {
-        console.log({ err });
+        notification.error(err);
       });
   };
 
@@ -62,54 +71,6 @@ function App() {
     }
   }, [isBottom, sortKey]);
 
-  const formatDate = useCallback((date: string | number | Date) => {
-    const createdAt: any = new Date(date);
-
-    const userVisited: any = new Date();
-
-    const diff = userVisited - createdAt;
-
-    // convert the milliseconds to seconds
-    const toSec = diff / 1000;
-
-    // convert the seconds to minutes
-    const toMin = toSec / 60;
-
-    // convert the minutes to hours
-    const toHour = toMin / 60;
-
-    // convert the hours to days
-    const toDays = toHour / 24;
-
-    // now we'll round the days up/down
-    const rounded = Math.round(toDays);
-
-    const relativeTime: any = new Intl.RelativeTimeFormat("en").format(
-      -rounded,
-      "day"
-    );
-
-    if (relativeTime[0] + relativeTime[1] >= 7) {
-      return (
-        createdAt.getDate() +
-        "/" +
-        (createdAt.getMonth() + 1) +
-        "/" +
-        createdAt.getFullYear()
-      );
-    } else {
-      return relativeTime;
-    }
-  }, []);
-
-  const convertCentToDollar = useCallback((cent: number) => {
-    const dollars = cent / 100;
-    return dollars.toLocaleString("en-US", {
-      style: "currency",
-      currency: "USD",
-    });
-  }, []);
-
   if (loading && !isFetching) {
     return (
       <SpinContainer>
@@ -117,6 +78,7 @@ function App() {
       </SpinContainer>
     );
   }
+
   const menu = (
     <Menu onClick={(e) => setSortKey(e.key)}>
       <Menu.Item key="id">id</Menu.Item>
@@ -142,6 +104,7 @@ function App() {
           xl: 6,
           xxl: 3,
         }}
+        style={{ marginTop: "20px" }}
         dataSource={data}
         renderItem={(item: Props) => (
           <List.Item>
@@ -150,7 +113,6 @@ function App() {
               <CardFooter>
                 <CardList>Price: {convertCentToDollar(item.price)}</CardList>
                 <CardList>CreatedAt: {formatDate(item.date)}</CardList>
-                {item.id}
               </CardFooter>
             </Card>
           </List.Item>
@@ -167,68 +129,3 @@ function App() {
 }
 
 export default App;
-
-export const Container = styled.div`
-  padding: 50px;
-`;
-
-export const Head = styled.h1`
-  font-size: 25px;
-  color: black;
-  text-align: left;
-  font-weight: bold;
-  text-transform: capitalize;
-  margin-bottom: 35px;
-`;
-
-export const Card = styled.div`
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  color: rgba(0, 0, 0, 0.85);
-  font-size: 14px;
-  font-variant: tabular-nums;
-  line-height: 1.5715;
-  list-style: none;
-  font-feature-settings: "tnum", "tnum";
-  position: relative;
-  background: #fff;
-  border-radius: 2px;
-  border: 1px solid #ececec;
-  padding: 24px;
-  min-height: 430px;
-`;
-
-export const CardBody = styled.div`
-  font-size: ${(props: { size: number }) => `${props.size}px`};
-  text-align: center;
-  min-height: 267px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-`;
-
-export const CardFooter = styled.ul`
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  background: #fff;
-  border-top: 1px solid #f0f0f0;
-  display: flex;
-  flex-direction: column;
-`;
-
-export const CardList = styled.li`
-  float: left;
-  margin: 12px 0;
-  color: #00000073;
-  text-align: center;
-`;
-
-export const SpinContainer = styled.div`
-  margin: 20px 0;
-  margin-bottom: 20px;
-  padding: 30px 50px;
-  text-align: center;
-  border-radius: 4px;
-`;
