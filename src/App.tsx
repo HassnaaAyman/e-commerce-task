@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from "react";
+/* eslint-disable @typescript-eslint/no-unused-expressions */
+import React, { useEffect, useCallback, useState, useMemo } from "react";
 import { List, Spin } from "antd";
 import axios from "axios";
 import styled from "styled-components";
+import useHandleScroll from "./utils/useHandleScroll";
 
 type Props = {
   id: number;
@@ -13,22 +15,40 @@ type Props = {
 
 function App() {
   const [data, setData] = useState<Array<Props>>([]);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [hasMorePages, setHasMorePages] = useState(true);
+
+  const isBottom = useHandleScroll();
+
+  const fetchData = () => {
+    axios
+      .get(`http://localhost:3000/products?_page=${page}&_limit=100`)
+      .then((res) => {
+        setLoading(false);
+        if (res.data.length === 0) {
+          setHasMorePages(false);
+        }
+        setData([...data, ...res.data]);
+      })
+      .catch((err) => {
+        console.log({ err });
+      });
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      await axios
-        .get("http://localhost:3000/products?_page=10&_limit=15")
-        .then((res) => {
-          setData(res.data);
-        })
-        .catch((err) => {
-          console.log({ err });
-        });
-    };
     fetchData();
   }, []);
 
-  const formatDate = (date: string | number | Date) => {
+  useEffect(() => {
+    if (isBottom && hasMorePages) {
+      setPage((prevPage) => prevPage + 1);
+      setLoading(true);
+      fetchData();
+    }
+  }, [isBottom]);
+
+  const formatDate = useCallback((date: string | number | Date) => {
     const createdAt: any = new Date(date);
 
     const userVisited: any = new Date();
@@ -66,27 +86,23 @@ function App() {
     } else {
       return relativeTime;
     }
-  };
+  }, []);
 
-  const convertCentToDollar = (cent: number) => {
+  const convertCentToDollar = useCallback((cent: number) => {
     const dollars = cent / 100;
     return dollars.toLocaleString("en-US", {
       style: "currency",
       currency: "USD",
     });
-  };
+  }, []);
 
   if (data.length === 0) {
     return (
-      <Spin
-        tip="loading..."
-        size="large"
-        style={{ display: "flex", alignSelf: "center" }}
-      />
+      <SpinContainer>
+        <Spin tip="loading..." size="large" />
+      </SpinContainer>
     );
   }
-
-  console.log(data.length, ">>>");
 
   return (
     <Container>
@@ -114,6 +130,12 @@ function App() {
           </List.Item>
         )}
       />
+      {loading && (
+        <SpinContainer>
+          <Spin tip="loading..." size="large" />
+        </SpinContainer>
+      )}
+      {!hasMorePages && <h1>~ end of catalogue ~</h1>}
     </Container>
   );
 }
@@ -176,14 +198,11 @@ export const CardList = styled.li`
   color: #00000073;
   text-align: center;
 `;
-// export const CardHead = styled.div`
-// min-height: 48px;
-//     margin-bottom: -1px;
-//     padding: 0 24px;
-//     color: rgba(0, 0, 0, 0.85);
-//     font-weight: 500;
-//     font-size: 16px;
-//     background: transparent;
-//     border-bottom: 1px solid #f0f0f0;
-//     border-radius: 2px 2px 0 0;
-// `
+
+export const SpinContainer = styled.div`
+  margin: 20px 0;
+  margin-bottom: 20px;
+  padding: 30px 50px;
+  text-align: center;
+  border-radius: 4px;
+`;
