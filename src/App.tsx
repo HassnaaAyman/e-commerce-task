@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unused-expressions */
-import React, { useEffect, useCallback, useState, useMemo } from "react";
-import { List, Spin } from "antd";
+/* eslint-disable react-hooks/exhaustive-deps */
+import { useEffect, useCallback, useState } from "react";
+import { Button, List, Menu, Spin, Dropdown } from "antd";
 import axios from "axios";
 import styled from "styled-components";
 import useHandleScroll from "./utils/useHandleScroll";
@@ -16,20 +16,30 @@ type Props = {
 function App() {
   const [data, setData] = useState<Array<Props>>([]);
   const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
   const [hasMorePages, setHasMorePages] = useState(true);
+  const [sortKey, setSortKey] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const isBottom = useHandleScroll();
 
   const fetchData = () => {
+    setLoading(true);
     axios
-      .get(`http://localhost:3000/products?_page=${page}&_limit=100`)
+      .get(
+        `http://localhost:3000/products?_page=${page}&_limit=15&_sort=${sortKey}`
+      )
       .then((res) => {
+        if (sortKey.length > 0) {
+          setData(res.data);
+        } else {
+          setData([...data, ...res.data]);
+        }
+        setIsFetching(false);
         setLoading(false);
         if (res.data.length === 0) {
           setHasMorePages(false);
         }
-        setData([...data, ...res.data]);
       })
       .catch((err) => {
         console.log({ err });
@@ -43,10 +53,14 @@ function App() {
   useEffect(() => {
     if (isBottom && hasMorePages) {
       setPage((prevPage) => prevPage + 1);
+      setIsFetching(true);
+      fetchData();
+    }
+    if (sortKey.length > 0) {
       setLoading(true);
       fetchData();
     }
-  }, [isBottom]);
+  }, [isBottom, sortKey]);
 
   const formatDate = useCallback((date: string | number | Date) => {
     const createdAt: any = new Date(date);
@@ -96,17 +110,28 @@ function App() {
     });
   }, []);
 
-  if (data.length === 0) {
+  if (loading && !isFetching) {
     return (
       <SpinContainer>
         <Spin tip="loading..." size="large" />
       </SpinContainer>
     );
   }
+  const menu = (
+    <Menu onClick={(e) => setSortKey(e.key)}>
+      <Menu.Item key="id">id</Menu.Item>
+      <Menu.Item key="size"> size</Menu.Item>
+      <Menu.Item key="price">price</Menu.Item>
+    </Menu>
+  );
 
   return (
     <Container>
       <Head>welcome to our website!</Head>
+      <Dropdown overlay={menu} placement="bottomLeft" arrow>
+        <Button>Sort By</Button>
+      </Dropdown>
+
       <List
         grid={{
           gutter: 16,
@@ -125,12 +150,13 @@ function App() {
               <CardFooter>
                 <CardList>Price: {convertCentToDollar(item.price)}</CardList>
                 <CardList>CreatedAt: {formatDate(item.date)}</CardList>
+                {item.id}
               </CardFooter>
             </Card>
           </List.Item>
         )}
       />
-      {loading && (
+      {isFetching && (
         <SpinContainer>
           <Spin tip="loading..." size="large" />
         </SpinContainer>
